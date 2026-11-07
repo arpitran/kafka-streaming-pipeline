@@ -34,7 +34,7 @@ wheels = [
 ]
 
 [[package]]
-name = "lakehouse-streaming-graphql"
+name = "kafka-streaming-pipeline"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
