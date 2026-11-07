@@ -57,9 +57,9 @@ Wait 90 seconds, then press `Ctrl-C` to stop it.
 
 **7. Check the answer.**
 
-    uv run python -c "import duckdb; print(duckdb.sql(\"select count(*), sum(trips) from 'lake/gold/zone_stream/*.parquet'\").fetchall())"
+    uv run stream/check.py
 
-You should see `[(4174, 98664)]`. That is 4,174 rows covering 98,664 trips.
+You should see `4174 rows, 98664 trips`.
 
 **When you are done:** `brew services stop kafka`.
 
