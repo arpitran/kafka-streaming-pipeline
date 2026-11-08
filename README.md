@@ -15,9 +15,10 @@ Kafka -> Spark Structured Streaming pipeline on NYC taxi trips: keyed producer, 
 ## Run it (Mac, about 10 minutes)
 Copy each command into Terminal, one at a time, and press Enter. Wait for it to finish before the next.
 
-**1. Install the tools (once).** You need [Homebrew](https://brew.sh) and [uv](https://docs.astral.sh/uv/getting-started/installation/).
+**1. Install the tools (once).** You need [Homebrew](https://brew.sh) and [uv](https://docs.astral.sh/uv/getting-started/installation/). For Kafka, pick one: [Docker Desktop](https://www.docker.com/products/docker-desktop/) (option A in step 4) or Homebrew Kafka (option B).
 
-    brew install openjdk@17 kafka
+    brew install openjdk@17
+    brew install kafka    # only for option B
 
 **2. Get the code and the data.**
 
@@ -35,7 +36,15 @@ The `curl` line downloads a 50 MB file of New York taxi rides.
 
 It takes about a minute and creates a `lake/` folder. It prints a lot of text; that is normal. No red `Error` at the end means success.
 
-**4. Start Kafka and make the topic** (a topic is a named mailbox for messages).
+**4. Start Kafka and make the topic** (a topic is a named mailbox for messages). Use one option, not both: each one listens on port 9092.
+
+Option A, Docker:
+
+    docker compose up -d
+    sleep 10
+    docker exec -it kafka /opt/kafka/bin/kafka-topics.sh --create --topic trips --partitions 3 --if-not-exists --bootstrap-server localhost:9092
+
+Option B, Homebrew:
 
     brew services start kafka
     sleep 10
@@ -61,9 +70,12 @@ Wait 90 seconds, then press `Ctrl-C` to stop it.
 
 You should see `4174 rows, 98664 trips`.
 
-**When you are done:** `brew services stop kafka`.
+**When you are done:** option A: `docker compose stop` (or `docker compose down` to also delete Kafka's data). Option B: `brew services stop kafka`.
 
 If something fails, the usual cause is a missing `export JAVA_HOME=...` line in that Terminal window, or Kafka not running yet.
+
+## Learn Kafka
+Step-by-step lessons, from basics to expert, live in [`lessons/`](lessons/README.md).
 
 ## Next
 - Consumer groups and rebalancing demo

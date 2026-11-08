@@ -1,0 +1,36 @@
+# Two interchangeable single-node Kafka brokers (KRaft mode). Run one at a time:
+# both listen on localhost:9092, which stream/ and apps/ use.
+#
+#   docker compose up -d                       # Apache Kafka (default, set in .env)
+#   docker compose --profile confluent up -d   # Confluent Kafka
+#
+# To switch, stop the running one first: `docker compose stop`.
+# Data survives `docker compose stop`; `docker compose down` deletes it.
+services:
+  kafka:
+    profiles: [apache]
+    image: apache/kafka:4.0.0
+    container_name: kafka
+    ports:
+      - "9092:9092"
+
+  kafka-confluent:
+    profiles: [confluent]
+    image: confluentinc/cp-kafka:8.0.0
+    container_name: kafka-confluent
+    ports:
+      - "9092:9092"
+    environment:
+      CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk  # any fixed 22-character base64 ID
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller  # one node does both jobs
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092  # address clients are told to use
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      # Defaults are 3 copies; a single broker can only hold 1.
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_LOG_DIRS: /tmp/kraft-combined-logs
