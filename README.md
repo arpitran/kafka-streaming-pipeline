@@ -70,9 +70,12 @@ Wait 90 seconds, then press `Ctrl-C` to stop it.
 
 You should see `4174 rows, 98664 trips`.
 
-**When you are done:** option A: `docker compose stop` (or `docker compose down` to also delete Kafka's data). Option B: `brew services stop kafka`.
+**When you are done:** option A: `docker compose stop` or `docker compose down` (data stays in a Docker volume; `docker compose down -v` deletes it). Option B: `brew services stop kafka`.
 
 If something fails, the usual cause is a missing `export JAVA_HOME=...` line in that Terminal window, or Kafka not running yet.
+
+## Development
+Make shortcuts and how to add a Python library: [`docs/development.md`](docs/development.md).
 
 ## Learn Kafka
 Step-by-step lessons, from basics to expert, live in [`lessons/`](lessons/README.md).

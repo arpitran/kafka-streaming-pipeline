@@ -6,4 +6,5 @@ dependencies = [
     "pyspark==4.3.0",  # must match the spark-sql-kafka connector version in stream/consume.py
     "duckdb",
     "kafka-python",
+    "confluent-kafka>=2.16.1",
 ]

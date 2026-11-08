@@ -5,7 +5,27 @@
 #   docker compose --profile confluent up -d   # Confluent Kafka
 #
 # To switch, stop the running one first: `docker compose stop`.
-# Data survives `docker compose stop`; `docker compose down` deletes it.
+# Data lives in named volumes, so it survives `docker compose down` and image upgrades.
+# To delete it: `docker compose down -v`.
+
+# Shared broker settings. The Apache image ignores its built-in config once any
+# KAFKA_* variable is set, so both images get the full list.
+x-kafka-env: &kafka-env
+  CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk  # any fixed 22-character base64 ID
+  KAFKA_NODE_ID: 1
+  KAFKA_PROCESS_ROLES: broker,controller  # one node does both jobs
+  KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093
+  KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+  KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092  # address clients are told to use
+  KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+  KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+  # Defaults are 3 copies; a single broker can only hold 1.
+  KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+  KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+  KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+  # Both images own this path as the non-root user they run as; a new path would be root-owned.
+  KAFKA_LOG_DIRS: /var/lib/kafka/data
+
 services:
   kafka:
     profiles: [apache]
@@ -13,6 +33,9 @@ services:
     container_name: kafka
     ports:
       - "9092:9092"
+    environment: *kafka-env
+    volumes:
+      - kafka-data:/var/lib/kafka/data
 
   kafka-confluent:
     profiles: [confluent]
@@ -20,17 +43,11 @@ services:
     container_name: kafka-confluent
     ports:
       - "9092:9092"
-    environment:
-      CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk  # any fixed 22-character base64 ID
-      KAFKA_NODE_ID: 1
-      KAFKA_PROCESS_ROLES: broker,controller  # one node does both jobs
-      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093
-      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092  # address clients are told to use
-      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
-      # Defaults are 3 copies; a single broker can only hold 1.
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
-      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
-      KAFKA_LOG_DIRS: /tmp/kraft-combined-logs
+    environment: *kafka-env
+    volumes:
+      - kafka-confluent-data:/var/lib/kafka/data
+
+# Separate volumes: the two brokers keep separate data.
+volumes:
+  kafka-data:
+  kafka-confluent-data:
